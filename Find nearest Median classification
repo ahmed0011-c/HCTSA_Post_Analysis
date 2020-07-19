@@ -1,0 +1,262 @@
+%%Finding the nearest median
+
+% defining variables
+load('data.mat')
+load('xtrain.mat')
+load('standard_dev')
+ 
+HCTSA_18s=data;
+
+num_channel=15; % number of channels
+num_fly=13;     % number of flies
+condition2_start = size(HCTSA_18s,1)/2; 
+operations= 7283; % number of operations availble
+condition_one= HCTSA_18s(1:condition2_start,:); 
+
+
+
+%% Method
+
+
+%channel_idx = 1;
+%for ch= 1:num_channel
+    for op_idx = 1:size(HCTSA_18s,2)
+    op_under_inv = HCTSA_18s(:,op_idx);
+    condition1_under_inv_glo = op_under_inv(1:condition2_start);
+    condition2_under_inv_glo = op_under_inv(1+condition2_start:end);
+    idx = 1;
+       for channel_idx = 1:num_channel
+        result_idx = 1;
+            for fly_idx = 1:num_fly
+                i= channel_idx-1;
+            condition1_under_inv = condition1_under_inv_glo((num_fly*i)+1:num_fly*(i+1),:);
+            ele_condition1_under_inv = condition1_under_inv(fly_idx);
+            condition1_under_inv(fly_idx) = [];
+          con1_flies_lo_ch(:,fly_idx,channel_idx,op_idx) = condition1_under_inv;
+          
+            mean_condition1_under_inv = nanmedian(condition1_under_inv);    % method
+           % for fly_idx_comb = 1:num_fly
+                condition2_under_inv = condition2_under_inv_glo((num_fly*i)+1:num_fly*(i+1),:);        
+                ele_condition2_under_inv = condition2_under_inv(fly_idx);
+                condition2_under_inv(fly_idx) = [];
+            con2_flies_lo_ch(:,fly_idx,channel_idx,op_idx) = condition2_under_inv;
+
+                mean_condition2_under_inv = nanmedian(condition2_under_inv);   %method
+                [~,pred_ele_condition1_under_inv(result_idx,op_idx)] = min([abs(ele_condition1_under_inv - mean_condition1_under_inv),...
+                abs(ele_condition1_under_inv - mean_condition2_under_inv)]);
+                [~,pred_ele_condition2_under_inv(result_idx,op_idx)] = min([abs(ele_condition2_under_inv - mean_condition1_under_inv),...
+                abs(ele_condition2_under_inv - mean_condition2_under_inv)]);
+            
+                if pred_ele_condition1_under_inv(result_idx,op_idx) == 1 && pred_ele_condition2_under_inv(result_idx,op_idx) == 2
+                    accuracy(result_idx,op_idx,channel_idx) = 1;
+                elseif pred_ele_condition1_under_inv(result_idx,op_idx) == 1 || pred_ele_condition2_under_inv(result_idx,op_idx) == 2
+                    accuracy(result_idx,op_idx,channel_idx) = 0.5;
+                else
+                    accuracy(result_idx,op_idx,channel_idx) = 0;
+                end
+                result_idx = result_idx+1;
+          %  end
+        end
+        accuracy_per_op(idx,op_idx) = mean(accuracy(:,op_idx,channel_idx));
+        std_accuracy_per_op(idx,op_idx) = std(accuracy(:,op_idx,channel_idx));
+        idx = idx + 1;
+       end
+       
+       fprintf('Operation %d out of %d is done \n',op_idx,size(HCTSA_18s,2));
+
+    end
+    
+    
+    %% Obtaining top Operation in terms of classification accuracy
+    
+  
+    for i2= 1:num_channel
+        
+        
+ [axis(i2,:),position(i2,:)] = sort(accuracy_per_op(i2,:), 'descend');
+ top_position(i2,:)= position(i2,1:100); % location of top_operations
+ sorted_CA(i2,:) = sort(accuracy_per_op(i2,:), 'descend'); % sorted classification accuracy Mat file in descending order
+ 
+ top_operations(i2,:)=  sorted_CA(i2,1:100);
+    end
+    
+    
+    
+       %% getting threshold
+       
+       for ch= 1:num_channel
+    
+    for iter= 1:size(HCTSA_18s,2)
+       
+       for flies= 1:num_fly
+    
+    condition_1= con1_flies_lo_ch(:,flies,ch,iter); 
+    
+      means_condition1_under_inv(:,flies,ch,iter) = nanmedian(condition_1);  % change method
+
+    condition_2= con2_flies_lo_ch(:,flies,ch,iter);
+    
+  means_condition2_under_inv(:,flies,ch,iter) = nanmedian(condition_2);     %change method
+  
+  tryal= [means_condition1_under_inv(:,flies,ch,iter);means_condition2_under_inv(:,flies,ch,iter)];
+  
+      Threshold_value(ch,flies,iter)= nanmean(tryal); % sorted in channels/ cross-validation/ operation
+
+  
+        end
+     end
+  end
+  
+ for  ch= 1:num_channel
+   for i= 1:size(HCTSA_18s,2)
+ 
+       trial= Threshold_value(ch,:,i);
+       Thresholds(ch,i)= mean(trial);
+       
+   end    
+ end
+     
+       
+       
+       %% getting bias
+       z= Thresholds;
+num_channels= 15;
+num_fly= 13;
+trials= 10;
+
+for operation_inv= 1:size(condition_one,2)
+    for channels = 1:num_channels
+        i= channels-1;
+        %for i= 1:trials
+            
+            con1= condition_one((num_fly*i)+1:num_fly*(i+1),operation_inv);   
+          
+            test= mean(con1);
+            
+                
+             if isnan(z(channels,operation_inv)) == 1 
+                bias(channels,operation_inv)= nan;
+             
+             
+             elseif test >= z(channels,operation_inv)   % || test > Thresholds(channels,operation_inv)
+                bias(channels,operation_inv) = 1;
+                
+            else
+              
+                bias(channels,operation_inv) = 0;
+%                
+           end
+       % end
+    end
+end
+
+   
+   
+%% getting Z-score
+
+for i= 1:operations
+     for i2 = 1:num_channel
+              for i3= 1:num_fly
+         
+      
+   Threshold= Thresholds(i2,i);
+   sd= nanstd(Xtrain(:,i2,i));
+   %observation
+   
+xawake = Xtrain(i3,i2,i); % awake
+x2= Xtrain(i3+ num_fly,i2,i); % anesthesia 
+      
+
+
+z_score_awake(i3,i2,i) = (xawake- Threshold)/ sd;
+z_score_anaesthesia(i3,i2,i) = (x2 - Threshold)/ sd;
+
+              end 
+          z_score_W(i2,i)= nanmean(z_score_awake(:,i2,i));
+          z_score_S(i2,i)= nanmean(z_score_anaesthesia(:,i2,i));
+         end
+     end
+       
+%% plotting the Z-score Map for top operation
+ 
+  
+  for i= 1:num_channel
+      
+bias_mod(i,:)= bias(i,top_position(i,:));
+
+
+z_score_W_mod(i,:)= z_score_W(i,top_position(i,:));
+
+z_score_S_mod(i,:)= z_score_S(i,top_position(i,:));
+  end
+  
+%%
+  for i =1:size(top_operations,2)
+    for ix= 1:num_channel
+        
+     b= bias_mod(ix,i);
+       if b ==0
+    z_score_W_mod(ix,i) = z_score_W_mod(ix,i)*-1;
+    
+    z_score_S_mod(ix,i) = z_score_S_mod(ix,i)*-1;
+        end
+    end 
+  end
+      
+     
+  %%
+  
+  for ix= 1:num_channel
+      for i= 1:size(top_operations,2)
+          
+          
+  if z_score_W_mod(ix,i) < 0 
+      
+      zvalue_W(ix,i)=  -1;
+      
+  else 
+       zvalue_W(ix,i) = 1;
+  end
+  
+        if z_score_S_mod(ix,i) < 0 
+      
+      zvalue_sleep(ix,i)=  -1;
+      
+  else 
+       zvalue_sleep(ix,i) = 1;
+       
+        end
+      end
+  end
+  
+  %%
+  for i= 1: size(top_operations,2)
+      for i2 = 1: num_channel
+          
+ test_x_av= test(:,i2,top_position(i2,i));
+ test_x= mean(test_x_av);
+ test_sd_x = std(test_x_av);
+ 
+ z_value(i2,i)= (test_x - Thresholds(i2,top_position(i2,i)) )/ standard_dev(i2,top_position(i2,i));
+ standard_error(i2,i)=  test_sd_x;
+      end
+  end
+ 
+  
+  %% plotting
+  
+
+  
+plot(zvalue_W(1,:),'-s','MarkerSize',10,...
+    'MarkerEdgeColor','black','MarkerFaceColor','black')
+hold on
+plot(zvalue_sleep(1,:),'-s','MarkerSize',10,...
+    'MarkerEdgeColor','blue','MarkerFaceColor','blue')
+errorbar(z_value(1,:),standard_error(1,:),'-s','MarkerSize',10,...
+    'MarkerEdgeColor','red','MarkerFaceColor','red')
+hold off
+    
+title('Zscore map (Top 100 operation)')
+xlabel('Top operations 100')
+ylabel('Z value');
+set(gca,'fontsize',18)
