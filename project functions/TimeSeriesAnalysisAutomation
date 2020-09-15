@@ -1,0 +1,39 @@
+close all; clear; clc; %close any figures, clear any declared variable, 
+% clear display
+warning ('off','all'); %stop warnings
+%% Importing Data
+data = importdata('training_processed');
+%% Prepare the Dataset for the time series analysis
+% question plot, all the samples from channel 5 till channel 11, 
+% for the first trial existing in the second fly for the third condition
+Data_idx = 1;
+for channel = 1:size(data,2)
+    for trial = 1:size(data,3)
+        for fly = 1:size(data,4)
+            for condition = 1:size(data,5)
+                Med = median(data(:,channel,trial,fly,condition));
+                tempdata= data(:,channel,trial,fly,condition);
+                tempdata= tempdata > Med;
+               timeSeriesData{1,Data_idx} = ...
+                tempdata;
+                if condition == 1
+                    keywords{1,Data_idx} = 'awake';
+                elseif condition == 2
+                    keywords{1,Data_idx} = 'anastasia';
+                else
+                    keywords{1,Data_idx} = ...
+                        sprintf('channel%dTrial%dfly%dCondition%d',...
+                        channel,trial,fly,condition);
+                end
+                labels{1,Data_idx} = ...
+                        sprintf('channel%dTrial%dfly%dCondition%d.dat',...
+                        channel,trial,fly,condition);
+                Data_idx = Data_idx + 1;
+            end
+        end
+    end
+end
+%% Save Dataset
+save('INP_test.mat','timeSeriesData','labels','keywords');
+%% Initialize the Dataset
+TS_init('INP_test.mat','INP_mops.txt','INP_ops.txt');
