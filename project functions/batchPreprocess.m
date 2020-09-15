@@ -99,7 +99,27 @@ end
 % (3) plot output
 
 
+%% plot time-Series   (First)
 
+%     
+
+    data= importdata(name4)
+    
+    plot(data(:,:),'Color',[1 0 0],'LineWidth',3,'DisplayName','data-time-series');  % 1 for awake
+    
+
+
+
+filefig= sprintf('timeseries_one_fly_at_channel_%d.png',allocate.channel);
+% filefig=  sprintf('Comparison_of_Power_sectrum_from_one_fly_at_channel_%d.png ',i);
+ fig=  sprintf('Time-Series data for one fly at channel %d',allocate.channel)); %d.png',i);
+
+ylabel('Z-score')
+xlabel('Time points')
+%format_fig;
+title(fig)
+set(gca,'fontsize',9);
+saveas(gcf,filefig);
 
 
 end
