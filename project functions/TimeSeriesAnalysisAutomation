@@ -37,3 +37,32 @@ end
 save('INP_test.mat','timeSeriesData','labels','keywords');
 %% Initialize the Dataset
 TS_init('INP_test.mat','INP_mops.txt','INP_ops.txt');
+
+
+%%  visulaize HCTSA output 
+%normalize data set per operation acorss flies and channels
+
+for i = 1 :size(HCTSA,2)
+     x = nanmean(HCTSA(:,i));
+     y = nanstd(HCTSA(:,i));
+     
+     for ix = 1:size(HCTSA,1)
+    
+    z= HCTSA(ix,i);
+   
+    normalized_hctsa(ix,i) =  (z-x)/y;
+ 
+ 
+     end
+     
+end
+ 
+
+
+
+imagesc(HCTSA, [-3,3]);
+xlabel('HCTSA operations')
+ylabel('Time-Series')
+title('Fly HCTSA output')
+set(gca,'fontsize',18);
+
