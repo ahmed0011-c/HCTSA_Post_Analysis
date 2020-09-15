@@ -1,0 +1,29 @@
+function [outputArg1,outputArg2] = batch_analysis(inputArg1,params)
+
+
+%identify variables
+
+
+%loading variables
+load('validation_data.mat')
+load('training_data.mat')
+
+%identify variables
+for 
+    for
+
+
+
+
+
+
+
+
+
+
+
+%   Detailed explanation goes here
+outputArg1 = inputArg1;
+outputArg2 = inputArg2;
+end
+
