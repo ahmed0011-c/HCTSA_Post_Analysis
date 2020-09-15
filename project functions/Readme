@@ -1,0 +1,75 @@
+Readme.
+Welcome to Ahmed’s HCTSA project to analyse the local field potential of flies
+For Analyses replication, you would require to download the folder “Data” including the folder within it, as well using Matlab version 2018a, installing HCTSA package, specifically version (V.099) and libsvm package for classification
+from the following links:
+
+(1) https://github.com/benfulcher/hctsa/releases
+(2) https://www.csie.ntu.edu.tw/~cjlin/libsvm/oldfiles/index-1.0.html
+
+
+As soon as you install these packages, now you can start your analysis, while data is separated into two folders Dror flies for training data and Rihanon files for validation data; you can manipulate the data using the scripts and functions in project function folder to:
+
+The main functions simply operate by indicating whether 0 to avoid computation or 1 to compute in a Job structure file type
+Also require to specify the requested channel and operation  in a allocate structure file type
+
+Main functions:
+
+(1)batchPreprocess: responsible for carrying out pre-processing steps
+1)	Removelinenoise and apply tapers[3,5]
+2)	Detrend data
+3)	Normalize time-series using z-score
+4)	calculate power spectrum using [get_power] function
+
+Job.remlinenoise 
+Job.detrend
+Job.zscore
+Job.powersc
+
+allocate.fly;
+allocate.channel;
+ allocate.trial;
+
+
+[datafdn] = batchPreprocess(Job,allocate,params)
+
+
+
+
+
+
+(2) batchClassify
+
+ 1)  total average svm thresholds for the 13 cross validation
+ 
+ 2) dirction of the operation
+
+3) classification accuracy
+ 
+3) prediction of the validation data
+
+(3) Batch_analysis
+[svm_c,accuracy,lol_threshold,direction,predict]= batchClassify(Job,params,allocate)
+
+
+(3) Compute batchPreprocess and Batch_analysis sequentially.
+
+:-        Job.predict=  1  
+          Job.classify=   1
+
+
+ allocate.channel;
+ allocate.operation;
+allocate.datatype
+
+
+[svm_c,accuracy,lol_threshold,direction,predict]= batch_analysis(Job,params,allocate)
+
+
+
+
+
+
+
+
+
+
