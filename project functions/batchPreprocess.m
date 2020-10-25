@@ -59,13 +59,6 @@ end
 
 %(1) pre-process data
 
-if Job.remlinenoise ==1 
-    
-    data =importdata(name1);
- 
-    [dataf] = getfilter(data,params,name2)  ;
-    
-end
 
 if Job.detrend == 1 
     
@@ -85,7 +78,17 @@ end
 
 
 
-% (2) preform power calculation
+
+if Job.remlinenoise ==1 
+    
+    data =importdata(name1);
+ 
+    [dataf] = getfilter(data,params,name2)  ;
+    
+end
+
+
+(2) preform power calculation
 
 if Job.powersc== 1
     
@@ -94,7 +97,6 @@ if Job.powersc== 1
  [S,f]= getpower(data,params,name5);
     
 end
-
 
 % (3) plot output
 
