@@ -14,10 +14,11 @@ Also require to specify the requested channel and operation  in a allocate struc
 
 Main functions:
 
-(1)batchPreprocess: responsible for carrying out pre-processing steps
-1)	Removelinenoise and apply tapers[3,5]
-2)	Detrend data
-3)	Normalize time-series using z-score
+(1)batchPreprocess: responsible for carrying out pre-processing steps  (On 25/10/2020 I updated the preprocessing code to detrend, Normalize then removelinenoise instead removelinenoise first).
+
+1)	Detrend data
+2)	Normalize time-series using z-score
+3)	Removelinenoise and apply tapers[3,5]
 4)	calculate power spectrum using [get_power] function
 
 Job.remlinenoise 
