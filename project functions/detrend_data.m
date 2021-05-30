@@ -8,8 +8,8 @@ function [datafd] = detrend_data(data,params,name3)
 % step 2
 % linear detrend the data
    % for index= 1:num_channel
-    
-datafd= detrend(data(:,:));
+    x= mean(data);
+datafd= data-x;
 
 
 
